@@ -77,7 +77,6 @@ fun main() {
     val x = TestJavaClassKWrapper(TestJavaClass()).genericsAreCoolToo(
         testFoo = listOf("oh yeah!")
     )
-    println(x)
 }
 ```
 ...granting my wish.
