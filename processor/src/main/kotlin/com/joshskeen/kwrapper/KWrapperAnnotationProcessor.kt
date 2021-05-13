@@ -7,7 +7,6 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import java.io.File
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
-import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
 import javax.tools.Diagnostic
@@ -68,14 +67,15 @@ fun ExecutableElement.toFunSpec(packageName: String, className: String): FunSpec
         ).build()
     }
 
-    val parametersString = parameters.joinToString(",") {
+    val parametersString = parameters.joinToString(", ") {
         it.name
     }
 
     return FunSpec.builder(simpleName.toString())
         .addParameters(parameters)
         .addModifiers(KModifier.PUBLIC)
-        .addCode("wrappee.${simpleName}(${parametersString})")
+        .addCode("return wrappee.${simpleName}(${parametersString})")
+        .returns(this.returnType.asTypeName().javaToKotlinType())
         .build()
 }
 
