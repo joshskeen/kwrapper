@@ -32,8 +32,9 @@ class SomeKotlinClass {
 }
 ```
 
-Experiment so far generates from this java file...
+Experiment so far generates from this java file (annotated with `@KWrapper`...
 ```java
+@KWrapper
 public class TestJavaClass {
 
     void someMethod(String argOne, String argTwo, Boolean mySweetBool) {
