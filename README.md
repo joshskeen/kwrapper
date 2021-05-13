@@ -51,7 +51,7 @@ public class TestJavaClass {
 }
 ```
 
-...the following kotlin output!
+...the following kotlin output:
 ```kotlin
 public class TestJavaClassKWrapper(
   private val wrappee: TestJavaClass
@@ -80,3 +80,4 @@ fun main() {
     println(x)
 }
 ```
+...granting my wish.
