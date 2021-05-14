@@ -75,7 +75,7 @@ public class TestJavaClassKWrapper(
 Which can now be used as: 
 ```kotlin
 fun main() {
-    val x = TestJavaClassKWrapper(TestJavaClass()).genericsAreCoolToo(
+    val x = TestJavaClassKWrapper.KWrapper.genericsAreCoolToo(
         testFoo = listOf("oh yeah!")
     )
 }
