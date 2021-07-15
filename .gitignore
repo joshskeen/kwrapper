@@ -67,3 +67,6 @@ distTmp/
 outTmp/
 /test.output
 /kotlin-native/dist
+.idea/libraries-with-intellij-classes.xml
+.idea/codeStyles/codeStyleConfig.xml
+.idea/codeStyles/Project.xml

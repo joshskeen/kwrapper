@@ -1,12 +1,12 @@
 package com.joshskeen.demo;
 
-import com.joshskeen.annotation.KWrapper;
+import com.joshskeen.kwrapper.annotation.KWrapper;
 
 import java.util.Arrays;
 import java.util.List;
 
 @KWrapper
-public class TestJavaClass {
+public class TestJavaClass<X> {
 
     void someMethod(String argOne, String argTwo, Boolean mySweetBool) {
         System.out.println(argOne + argTwo);
@@ -18,6 +18,10 @@ public class TestJavaClass {
 
     String genericsAreCoolToo(List<String> testFoo) {
         return "top funky";
+    }
+
+    <T> T radCool(T someType) {
+        return someType;
     }
 
 }

@@ -2,9 +2,11 @@ plugins {
     id 'java'
     id 'kotlin'
     id 'kotlin-kapt'
+    id 'java-library'
+    id 'maven-publish'
 }
 
-group 'org.example'
+group 'com.joshskeen'
 version '1.0-SNAPSHOT'
 
 repositories {
@@ -16,6 +18,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-reflect:1.5.0"
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
     implementation 'com.squareup:kotlinpoet:1.8.0'
+    implementation 'com.squareup:kotlinpoet-metadata:1.8.0'
     implementation "com.google.auto.service:auto-service:1.0"
     kapt "com.google.auto.service:auto-service:1.0"
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'

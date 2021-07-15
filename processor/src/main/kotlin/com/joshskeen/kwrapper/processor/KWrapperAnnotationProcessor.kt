@@ -1,7 +1,7 @@
-package com.joshskeen.kwrapper
+package com.joshskeen.kwrapper.processor
 
 import com.google.auto.service.AutoService
-import com.joshskeen.annotation.KWrapper
+import com.joshskeen.kwrapper.annotation.KWrapper
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import java.io.File
@@ -9,6 +9,8 @@ import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
+import javax.lang.model.element.TypeParameterElement
+import javax.lang.model.type.TypeMirror
 import javax.tools.Diagnostic
 import kotlin.reflect.jvm.internal.impl.builtins.jvm.JavaToKotlinClassMap
 import kotlin.reflect.jvm.internal.impl.name.FqName
@@ -31,6 +33,9 @@ class KWrapperAnnotationProcessor : AbstractProcessor() {
             val className = typeElement.simpleName.toString() + "KWrapper"
             val functions = typeElement.functions()
             val type = TypeSpec.classBuilder(className)
+                .addModifiers(KModifier.VALUE)
+                .addAnnotation(JvmInline::class)
+                .addTypeVariables(typeElement.typeParameters.toTypeVariables())
                 .primaryConstructor(
                     FunSpec.constructorBuilder()
                         .addParameter(WRAPPED_CLASS_NAME, typeElement.asType().asTypeName())
@@ -44,8 +49,11 @@ class KWrapperAnnotationProcessor : AbstractProcessor() {
                 )
                 .addFunctions(functions)
                 .build()
-            val extensionProp = PropertySpec.builder(EXTENSION_PROP_NAME, ClassName(packageName, className))
+            val extensionProp = PropertySpec.builder(EXTENSION_PROP_NAME, ClassName(packageName, className).parameterizedBy(
+                typeArguments = typeElement.typeParameters.toTypeVariables()
+            ))
                 .receiver(typeElement.asType().asTypeName())
+                .addTypeVariables(typeElement.typeParameters.toTypeVariables())
                 .getter(
                     FunSpec.getterBuilder()
                         .addStatement("return $className(this)")
@@ -57,17 +65,21 @@ class KWrapperAnnotationProcessor : AbstractProcessor() {
             FileSpec.builder(packageName, className)
                 .addType(type)
                 .addProperty(extensionProp)
-                .build().writeTo(file)
+                .build()
+                .writeTo(file)
         }
         return false
     }
 }
 
-fun TypeElement.functions(): List<FunSpec> = enclosedElements.filterIsInstance<ExecutableElement>().drop(1).map {
-    it.toFunSpec()
-}
+private fun List<TypeParameterElement>.toTypeVariables() = map { it.typeVariableName() }
 
-fun ExecutableElement.toFunSpec(): FunSpec {
+private fun TypeElement.functions(): List<FunSpec> =
+    enclosedElements.filterIsInstance<ExecutableElement>().drop(1).map {
+        it.toFunSpec()
+    }
+
+private fun ExecutableElement.toFunSpec(): FunSpec {
     val parameters = this.parameters.map { element ->
         val methodName = element.simpleName.toString()
         ParameterSpec.builder(
@@ -82,21 +94,22 @@ fun ExecutableElement.toFunSpec(): FunSpec {
 
     return FunSpec.builder(simpleName.toString())
         .addParameters(parameters)
+        .addTypeVariables(typeParameters.toTypeVariables())
         .addModifiers(KModifier.PUBLIC)
         .addCode("return $WRAPPED_CLASS_NAME.${simpleName}(${parametersString})")
         .returns(this.returnType.asTypeName().javaToKotlinType())
         .build()
 }
 
-fun ProcessingEnvironment.loge(msg: String) {
-    messager.printMessage(Diagnostic.Kind.ERROR, msg)
+fun TypeParameterElement.typeVariableName(): TypeVariableName {
+    val name = simpleName.toString()
+    val boundsTypeNames = bounds.map {
+        it.asTypeName().javaToKotlinType()
+    }
+    return TypeVariableName(name, boundsTypeNames, variance = null)
 }
 
-fun ProcessingEnvironment.log(msg: String) {
-    messager.printMessage(Diagnostic.Kind.NOTE, msg)
-}
-
-fun TypeName.javaToKotlinType(): TypeName {
+private fun TypeName.javaToKotlinType(): TypeName {
     return when (this) {
         is ParameterizedTypeName -> {
             (rawType.javaToKotlinType() as ClassName).parameterizedBy(*(typeArguments.map { it.javaToKotlinType() }
@@ -115,4 +128,12 @@ fun TypeName.javaToKotlinType(): TypeName {
             }
         }
     }
+}
+
+private fun ProcessingEnvironment.loge(msg: String) {
+    messager.printMessage(Diagnostic.Kind.ERROR, msg)
+}
+
+private fun ProcessingEnvironment.log(msg: String) {
+    messager.printMessage(Diagnostic.Kind.NOTE, msg)
 }

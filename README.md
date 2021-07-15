@@ -17,7 +17,7 @@ class SomeKotlinClass {
     }
 }
 ```
-Dream: 
+Idea: 
 ```kotlin
 class SomeKotlinClass {
     fun doStuff() {
@@ -35,7 +35,7 @@ class SomeKotlinClass {
 Experiment so far generates from this java file (annotated with `@KWrapper`)...
 ```java
 @KWrapper
-public class TestJavaClass {
+public class TestJavaClass<X> {
 
     void someMethod(String argOne, String argTwo, Boolean mySweetBool) {
         System.out.println(argOne + argTwo);
@@ -49,35 +49,54 @@ public class TestJavaClass {
         return "top funky";
     }
 
+    <T> T radCool(T someType) {
+        return someType;
+    }
+
 }
 ```
 
-...the following kotlin output:
+...the following kotlin source:
 ```kotlin
-public class TestJavaClassKWrapper(
-  private val wrappee: TestJavaClass
+@JvmInline
+public value class TestJavaClassKWrapper<X : Any>(
+    private val wrappee: TestJavaClass<X>
 ) {
-  public fun someMethod(
-    argOne: String,
-    argTwo: String,
-    mySweetBool: Boolean
-  ): Unit = wrappee.someMethod(argOne, argTwo, mySweetBool)
+    public fun someMethod(
+        argOne: String,
+        argTwo: String,
+        mySweetBool: Boolean
+    ): Unit = wrappee.someMethod(argOne, argTwo, mySweetBool)
 
-  public fun realKewlMethod(
-    doubleTrouble: Double,
-    nameOfPet: String,
-    cigarTypes: List<String>
-  ): List<String> = wrappee.realKewlMethod(doubleTrouble, nameOfPet, cigarTypes)
+    public fun realKewlMethod(
+        doubleTrouble: Double,
+        nameOfPet: String,
+        cigarTypes: List<String>
+    ): List<String> = wrappee.realKewlMethod(doubleTrouble, nameOfPet, cigarTypes)
 
-  public fun genericsAreCoolToo(testFoo: List<String>): String = wrappee.genericsAreCoolToo(testFoo)
+    public fun genericsAreCoolToo(testFoo: List<String>): String = wrappee.genericsAreCoolToo(testFoo)
+
+    public fun <T : Any> radCool(someType: T): T = wrappee.radCool(someType)
 }
+
+public val <X : Any> TestJavaClass<X>.KWrapper: TestJavaClassKWrapper<X>
+    get() = TestJavaClassKWrapper(this)
 ```
 Which can now be used as: 
 ```kotlin
 fun main() {
-    val x = TestJavaClassKWrapper.KWrapper.genericsAreCoolToo(
+    val kWrapper = TestJavaClass<String>().KWrapper
+
+    kWrapper.genericsAreCoolToo(
         testFoo = listOf("oh yeah!")
+    )
+
+    val radCool: String = kWrapper.radCool(someType = "foo")
+
+    kWrapper.realKewlMethod(
+        doubleTrouble = 1.0,
+        nameOfPet = "foo",
+        cigarTypes = listOf("maduro", "churchill")
     )
 }
 ```
-...granting my wish.
